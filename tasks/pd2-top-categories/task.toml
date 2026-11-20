@@ -1,0 +1,18 @@
+id = "pd2-top-categories"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==1.5.3", "numpy==1.26.4"]
+new = ["pandas==2.2.3", "numpy==1.26.4"]
+old_version = "1.5.3"
+new_version = "2.2.3"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "value_counts().reset_index() column names changed in pandas 2.0 (silent)"
+tags = []
+spec = """
+`top_categories(products, n)` returns a DataFrame with exactly two columns, `category`
+and `count`, holding the n most common values of products["category"], most common
+first, with a 0..n-1 index. `category_share(products)` returns a dict mapping each
+category to its share of all products, rounded to 3 decimal places.
+"""

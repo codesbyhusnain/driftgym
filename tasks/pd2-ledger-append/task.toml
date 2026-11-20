@@ -1,0 +1,18 @@
+id = "pd2-ledger-append"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==1.5.3", "numpy==1.26.4"]
+new = ["pandas==2.2.3", "numpy==1.26.4"]
+old_version = "1.5.3"
+new_version = "2.2.3"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "DataFrame.append was removed in pandas 2.0"
+tags = []
+spec = """
+`build_ledger(entries)` turns (date, account, amount) tuples into a DataFrame with
+columns date, account, amount: one row per entry, in order, with a 0..n-1 index and
+amounts stored exactly as given, as floats. `balance(ledger, account)` is the sum of
+that account's amounts (0.0 if it has none).
+"""

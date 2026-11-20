@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "driftgym"
+version = "0.1.0"
+description = "An RL environment and benchmark for repairing code broken by dependency upgrades, with cheat-resistant grading."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.50"]
+all = ["anthropic>=0.40", "openai>=1.50"]
+
+[project.scripts]
+driftgym = "driftgym.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["driftgym*"]
