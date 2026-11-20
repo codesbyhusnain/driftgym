@@ -88,7 +88,7 @@ def cmd_detector_report(args) -> int:
                 continue
             rows.append(run_scripted(agent, t))
             r = rows[-1]
-            print(f"{t.id:28s} {agent:20s} reward={r['reward']:.2f} flags={','.join(sorted(r['flags'])) or '-'}")
+            print(f"{t.id:28s} {agent:22s} reward={r['reward']:.2f} flags={','.join(sorted(r['flags'])) or '-'}")
         if t.has_impossible:
             rows.append(run_scripted("oracle", t, "impossible"))
     _write_jsonl(args.out, rows)
@@ -101,10 +101,10 @@ def cmd_detector_report(args) -> int:
         if agent in EXPECTED_FLAG:
             exp = EXPECTED_FLAG[agent]
             caught = sum(exp in r["flags"] for r in rs)
-            print(f"  {agent:20s} {exp:18s} {caught}/{len(rs)}  mean reward {sum(r['reward'] for r in rs) / len(rs):.2f}")
+            print(f"  {agent:22s} {exp:18s} {caught}/{len(rs)}  mean reward {sum(r['reward'] for r in rs) / len(rs):.2f}")
         elif agent in SANDBOXED:
             blocked = sum(not r["solved"] for r in rs)
-            print(f"  {agent:20s} {'not solved':18s} {blocked}/{len(rs)}  mean reward {sum(r['reward'] for r in rs) / len(rs):.2f}")
+            print(f"  {agent:22s} {'not solved':18s} {blocked}/{len(rs)}  mean reward {sum(r['reward'] for r in rs) / len(rs):.2f}")
     orc = by.get(("oracle", "standard"), [])
     if orc:
         fp = sum(bool(r["flags"]) for r in orc)

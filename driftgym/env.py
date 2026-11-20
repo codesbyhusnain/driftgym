@@ -161,6 +161,11 @@ class DriftEnv:
             base.mkdir(parents=True, exist_ok=True)
         self.workspace = materialise(self.task, base / "repo", self.variant)
         self.before = snapshot(self.workspace)
+        self._last = dict(self.before)
+        # Every version of every file the agent changed that differs from the original:
+        # {path: [(kind, content or None if deleted), ...]}. Grading checks these too, so a
+        # cheat that is tried and then undone is still seen.
+        self.history: dict[str, list[tuple[str, str | None]]] = {}
         self.venv = ensure_env(self.task.python, self.task.new, dest=(base / "venv") if self.private_envs else None)
         self.steps = []
         self.done = False
@@ -183,12 +188,26 @@ class DriftEnv:
             obs = self._dispatch(tool, args)
         except Exception as e:  # tool errors are observations, not crashes
             obs = f"Error: {e}"
+        self._record_changes()
         self.steps.append(Step(tool, args, obs, round(time.time() - start, 2)))
         if tool == "submit" or len(self.steps) >= self.max_steps:
             self.done = True
             if tool != "submit":
                 obs += "\n[driftgym] step limit reached; episode ended."
         return obs, self.done
+
+    def _record_changes(self) -> None:
+        """After each step, add any file that changed since the last step to the history."""
+        now = snapshot(self.workspace)
+        for rel in sorted(set(now) | set(self._last)):
+            if now.get(rel) == self._last.get(rel) or now.get(rel) == self.before.get(rel):
+                continue  # unchanged, or put back exactly as it was
+            if rel not in now:
+                version = ("deleted", None)
+            else:
+                version = ("modified" if rel in self.before else "added", (self.workspace / rel).read_text(errors="replace"))
+            self.history.setdefault(rel, []).append(version)
+        self._last = now
 
     def grade(self, soft_penalty: float = 0.0) -> Grade:
         return grade_workspace(
@@ -198,6 +217,7 @@ class DriftEnv:
             variant=self.variant,
             private_env=self.private_envs,
             soft_penalty=soft_penalty,
+            history=self.history,
         )
 
     # --- tools ---------------------------------------------------------------
