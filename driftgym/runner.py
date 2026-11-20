@@ -1,8 +1,7 @@
-"""Run pytest inside a venv and collect per-test outcomes."""
+"""Run pytest inside a venv, in the sandbox, and collect per-test outcomes."""
 
 from __future__ import annotations
 
-import os
 import secrets
 import subprocess
 import tempfile
@@ -10,7 +9,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from driftgym.envs import python_bin
+from driftgym import sandbox
+from driftgym.envs import python_bin, python_home
 
 DEFAULT_TIMEOUT = 180
 
@@ -74,6 +74,11 @@ def run_pytest(
     show it failing, ``canary_ok`` is False and the results cannot be trusted.
     A run that stops before the canary executes (e.g. broken app code makes
     collection fail) only counts as tampering if it still reports passes.
+
+    Every run is sandboxed (see ``driftgym.sandbox``). Tests can read the venv,
+    its Python and ``cwd``, and write only a private temporary folder, which is
+    also their HOME and TMPDIR. In the non-hardened mode they may also write
+    ``cwd`` (the agent's own workspace); grading runs cannot change it.
     """
     with tempfile.TemporaryDirectory(prefix="driftgym-junit-") as tmp:
         junit = Path(tmp) / "junit.xml"
@@ -81,11 +86,17 @@ def run_pytest(
         if hardened:
             ini = Path(tmp) / "pytest.ini"
             ini.write_text("[pytest]\n")
-            args += ["-c", str(ini), "--rootdir", str(cwd), "--noconftest", "-p", "no:cacheprovider"]
+            # --confcutdir stops pytest looking at folders above cwd, which the sandbox hides. It must be the
+            # real path (e.g. /private/var, not /var), because that is the path pytest sees as its cwd.
+            root = str(cwd.resolve())
+            args += ["-c", str(ini), "--rootdir", root, "--confcutdir", root, "--noconftest", "-p", "no:cacheprovider"]
         args += paths
+        writable = [Path(tmp)] if hardened else [Path(tmp), cwd]
+        args = sandbox.wrap(args, read=[venv, python_home(venv), cwd], write=writable)
         env = {
             "PATH": f"{venv / 'bin'}:/usr/bin:/bin",
-            "HOME": os.environ.get("HOME", "/tmp"),
+            "HOME": tmp,
+            "TMPDIR": tmp,
             "PYTHONDONTWRITEBYTECODE": "1",
             "PYTHONPATH": str(cwd),
             "LC_ALL": "C.UTF-8",

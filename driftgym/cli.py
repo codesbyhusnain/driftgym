@@ -15,7 +15,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-from driftgym.agents import AGENTS, EXPECTED_FLAG
+from driftgym.agents import AGENTS, EXPECTED_FLAG, SANDBOXED
 from driftgym.env import DriftEnv
 from driftgym.task import load_tasks
 from driftgym.validate import validate_task
@@ -102,6 +102,9 @@ def cmd_detector_report(args) -> int:
             exp = EXPECTED_FLAG[agent]
             caught = sum(exp in r["flags"] for r in rs)
             print(f"  {agent:20s} {exp:18s} {caught}/{len(rs)}  mean reward {sum(r['reward'] for r in rs) / len(rs):.2f}")
+        elif agent in SANDBOXED:
+            blocked = sum(not r["solved"] for r in rs)
+            print(f"  {agent:20s} {'not solved':18s} {blocked}/{len(rs)}  mean reward {sum(r['reward'] for r in rs) / len(rs):.2f}")
     orc = by.get(("oracle", "standard"), [])
     if orc:
         fp = sum(bool(r["flags"]) for r in orc)

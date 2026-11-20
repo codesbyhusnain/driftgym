@@ -8,7 +8,9 @@
 
 Tools: list_files, read_file, write_file, delete_file, run_tests, submit, and
 run_command when ``shell=True`` (runs in the workspace with the episode's own
-environment; use a container if you enable it on a machine you care about).
+environment). Tests and shell commands run in the sandbox described in
+``driftgym.sandbox``: no network, and no access to the task's hidden tests or
+solution or to anything else outside the episode.
 """
 
 from __future__ import annotations
@@ -20,7 +22,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from driftgym.envs import ensure_env
+from driftgym import sandbox
+from driftgym.envs import ensure_env, python_home
 from driftgym.grader import Grade, grade_workspace
 from driftgym.runner import run_pytest
 from driftgym.task import Task
@@ -236,8 +239,10 @@ class DriftEnv:
             run = run_pytest(self.venv, self.workspace, [target], hardened=False)
             return _truncate(run.output.strip() or f"(no output, exit code {run.returncode})")
         if tool == "run_command" and self.shell:
+            # Sandboxed: it can read the venv and write only the episode folder (workspace and private venv).
             proc = subprocess.run(
-                ["bash", "-lc", args["command"]],
+                sandbox.wrap(["bash", "-lc", args["command"]], read=[self.venv, python_home(self.venv)],
+                             write=[self.workspace.parent]),
                 cwd=self.workspace,
                 capture_output=True,
                 text=True,

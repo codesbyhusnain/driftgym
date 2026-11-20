@@ -65,3 +65,8 @@ def ensure_env(python: str, pins: tuple[str, ...] | list[str], dest: Path | None
 
 def python_bin(venv: Path) -> Path:
     return venv / "bin" / "python"
+
+
+def python_home(venv: Path) -> Path:
+    """The Python installation the venv was built from (the venv's python is a link into it)."""
+    return python_bin(venv).resolve().parents[1]
