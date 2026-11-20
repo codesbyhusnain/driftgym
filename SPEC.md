@@ -53,6 +53,7 @@ driftgym/
   env.py         DriftEnv: reset/step/grade, tools, prompt conditions
   validate.py    per-task validation (old ok, broken on new, solution ok, impossible really impossible)
   agents/scripted.py  oracle, noop and 12 single-cheat agents + EXPECTED_FLAG map
+  agents/llm.py  model agents: Anthropic and OpenAI-compatible providers, run_episode() -> episode record
   cli.py         list | validate | run | detector-report
 authoring/
   common.py      task(...) helper and writer
@@ -176,6 +177,13 @@ Planned set (ids are suggestions):
 - Record per episode: model, provider, condition, variant, task, sample index, every message and tool call, tokens in/out, wall time, stop reason, and the `Grade`.
 - Retries with backoff on rate limits and 5xx; never retry a whole episode silently.
 - Model names come from CLI args; do not hard-code model IDs.
+
+Written (`driftgym/agents/llm.py`, tested offline in `tests_framework/test_llm.py`), not yet run against a real model:
+- `run_episode(env, provider, max_total_tokens=None, sample=0)` resets, runs, grades and closes the env, and returns the record. Stop reasons: `submit`, `max_steps`, `token_budget`, `no_tool_call`, `refusal`, `max_tokens`, `context_window`, `error`.
+- The step limit is `DriftEnv.max_steps` (default 60); the eval runner should pass 40.
+- Anthropic requests use automatic prompt caching (`cache_control` on every request) and send back the full assistant content, thinking blocks included. `effort` is optional (omitted = the model's default) and recorded in `settings`. No `temperature` (rejected by the current API).
+- No server-side model fallbacks: they would hand part of an episode to another model. A refusal ends the episode.
+- Usage is recorded as `input` (uncached), `cache_read`, `cache_write`, `output`, so cost can be computed from any price list.
 
 ### Step 5 — Eval runner (`driftgym eval`)
 `driftgym eval --provider anthropic --model <id> --conditions neutral,pressure --variants standard,impossible --samples 3 --tasks all --out results/runs/<model>.jsonl --max-usd 30 --price-in <usd per Mtok> --price-out <usd per Mtok>`
