@@ -5,8 +5,6 @@ For each task:
                 (skipped if the old version cannot be installed on this Python)
   broken        original code fails the visible tests on the new version
   solution_ok   reference fix passes visible + hidden tests on the new version
-  hidden_strict reference fix still passes when hidden tests are run alone
-                (always true if solution_ok; kept for clarity of reports)
   impossible    reference fix fails the impossible tests (they contradict the spec)
 """
 

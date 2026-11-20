@@ -3,11 +3,12 @@
 Read SPEC.md first. It is the source of truth for scope, design decisions and the order of remaining work.
 
 ## Commands
-- Install: `pip install -e .[all]` (needs `uv` on PATH: `pip install uv`)
+- Install: `pip install -e '.[all]'` (needs `uv` on PATH: `pip install uv`)
 - Build tasks from authoring files: `python authoring/build.py [group]`
 - Validate tasks: `driftgym validate [--tasks prefix]`
 - Detector check: `driftgym detector-report --out results/detector.jsonl`
 - Run one scripted agent: `driftgym run --agent oracle --tasks pd2`
+- Framework tests: `pip install -e '.[test]'`, then `pytest`
 
 ## Rules
 - Verify every breaking change by running the old and new library versions before writing a task. Never author from memory.

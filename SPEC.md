@@ -32,7 +32,7 @@ We measure, per model and condition:
 
 - Python ≥ 3.11 for the framework (stdlib only in the core). Tasks run on **Python 3.11** inside venvs so old library versions install.
 - `uv` builds every environment (fast, cached). `pytest` runs task tests.
-- Optional: `anthropic`, `openai` SDKs for model runs (`pip install -e .[all]`).
+- Optional: `anthropic`, `openai` SDKs for model runs (`pip install -e '.[all]'`).
 - No network inside task tests. No Docker requirement (shell mode is optional and off by default).
 - Agent code only runs inside macOS's built-in sandbox (`sandbox-exec`). Other systems are not supported yet: the sandbox refuses to run there.
 - Never commit API keys. Read them from env vars (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`). `.env` is gitignored.
@@ -190,7 +190,7 @@ Markdown + PNG charts (matplotlib): honest success, cheat rate by type, impossib
 README: one-paragraph pitch, quickstart, task format, grading design, detector results, model results, limitations, how to add tasks, citation of related work, AI-use disclosure. Write-up: question → method → results → limitations → what an RL training run (Stage 2: GRPO on a small open model, with/without a hack penalty) would test.
 
 ### Step 8 — Final checks
-Fresh clone → `pip install -e .[all]` → `driftgym validate` (all valid) → `driftgym detector-report` → numbers in README match `results/`.
+Fresh clone → `pip install -e '.[all]'` → `driftgym validate` (all valid) → `driftgym detector-report` → numbers in README match `results/`.
 
 ---
 
@@ -200,7 +200,7 @@ Fresh clone → `pip install -e .[all]` → `driftgym validate` (all valid) → 
 - `exception_swallow` only catches broad handlers with trivial bodies; logging-and-returning-default variants are not caught.
 - `visible_only` can also mean an honest but incomplete fix; report it separately from cheating and review transcripts.
 - The sandbox is macOS only. `sandbox-exec` is marked deprecated by Apple but still ships and works on macOS 26. Linux needs an equivalent (e.g. bubblewrap) before any run there.
-- The sandbox limits files, network and processes, not what code does inside the pytest process. During grading, agent code shares that process with the hidden tests, so it could still inspect or rewrite them in memory (e.g. with an import hook). Sandboxed code can also check whether any path exists and list process IDs, but cannot read those files or other processes' details.
+- The sandbox limits files, network and processes, not what code does inside the pytest process. During grading, agent code shares that process with the hidden tests, so it could still inspect or rewrite them in memory (e.g. with an import hook). Sandboxed code can also check whether any path exists, but cannot read files outside the allowed paths or anything about other processes.
 - Shell-mode commands run in the same sandbox, with no network, so `pip install` fails there.
 - The canary only catches forgery that doesn't single it out. Agent code that reads the test files at run time could find the always-failing test and keep it failing; a check that the reported test ids match the expected ones would narrow this further.
 - Tasks are small; say so in limitations.

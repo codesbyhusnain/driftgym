@@ -14,5 +14,7 @@ spec = """
 `top_categories(products, n)` returns a DataFrame with exactly two columns, `category`
 and `count`, holding the n most common values of products["category"], most common
 first, with a 0..n-1 index. `category_share(products)` returns a dict mapping each
-category to its share of all products, rounded to 3 decimal places.
+category to its share of all products, rounded to 3 decimal places. Products whose
+category is missing are ignored by both: they are not a category and do not count
+towards the shares.
 """

@@ -37,8 +37,8 @@ from pathlib import Path
 SANDBOX_EXEC = Path("/usr/bin/sandbox-exec")
 SYSTEM_READ = ("/usr", "/bin", "/System", "/dev", "/private/etc")
 
-# System settings (sysctl) that may be read. Others, such as kern.procargs2,
-# would reveal other processes' command lines and environment variables.
+# System settings (sysctl) that may be read. Others, such as kern.proc.all,
+# would list every process on the machine.
 SYSCTLS = """
     (sysctl-name-prefix "hw.") (sysctl-name-prefix "machdep.cpu.") (sysctl-name-prefix "kern.os")
     (sysctl-name "kern.version") (sysctl-name "kern.hostname") (sysctl-name "kern.argmax")
@@ -68,9 +68,12 @@ def profile(read: list[Path], write: list[Path]) -> str:
         "(deny default)",
         # Start child processes; they stay in this sandbox.
         "(allow process-fork process-exec)",
-        # Signals only to processes in this sandbox; no information about any other process.
+        # Signals only to processes in this sandbox, and no information about any process but itself:
+        # another process's arguments and environment variables can hold secrets such as API keys.
+        # ("(target others)" is not enough: it still lets the code read its parent's.)
         "(allow signal (target same-sandbox))",
-        "(deny process-info* (target others))",
+        "(deny process-info*)",
+        "(allow process-info* (target self))",
         f"(allow sysctl-read {SYSCTLS})",
         # Look up file attributes anywhere (needed to start programs and resolve paths),
         # and load code from files that are readable.

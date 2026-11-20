@@ -25,7 +25,7 @@ def _write_jsonl(path: str | None, rows: list[dict]) -> None:
     if not path:
         return
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a") as f:
+    with open(path, "w") as f:  # overwrite, so a rerun replaces the old rows instead of adding to them
         for r in rows:
             f.write(json.dumps(r) + "\n")
 
