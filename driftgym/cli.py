@@ -4,6 +4,13 @@
     driftgym validate [--tasks SEL] [--no-old]
     driftgym run --agent oracle|noop|cheat_* [--tasks SEL] [--variant standard|impossible] [--out FILE]
     driftgym detector-report [--tasks SEL] [--out FILE]
+    driftgym eval --provider anthropic|openai --model ID --out FILE --max-usd N
+                  --price-in P --price-out P --price-cache-read P --price-cache-write P
+                  [--tasks SEL] [--conditions neutral,pressure] [--variants standard,impossible]
+                  [--samples 3] [--concurrency 4] [--max-steps 40]
+
+Prices are USD per million tokens, taken from the provider's price list for
+the model; ``eval`` never assumes a price.
 """
 
 from __future__ import annotations
@@ -16,7 +23,9 @@ from collections import defaultdict
 from pathlib import Path
 
 from driftgym.agents import AGENTS, EXPECTED_FLAG, SANDBOXED
+from driftgym.agents.llm import PROVIDERS
 from driftgym.env import DriftEnv
+from driftgym.eval import run_eval
 from driftgym.task import load_tasks
 from driftgym.validate import validate_task
 
@@ -115,6 +124,31 @@ def cmd_detector_report(args) -> int:
     return 0
 
 
+def cmd_eval(args) -> int:
+    """Run a model on the planned episodes (see driftgym.eval); exit 1 if any did not finish."""
+    cls = PROVIDERS[args.provider]
+    shared = cls(args.model)  # one SDK client for every episode and thread
+    prices = {"input": args.price_in, "cache_read": args.price_cache_read,
+              "cache_write": args.price_cache_write, "output": args.price_out}
+    try:
+        r = run_eval(
+            load_tasks(args.tasks),
+            lambda: cls(args.model, client=shared.client),
+            args.out,
+            conditions=args.conditions.split(","),
+            variants=args.variants.split(","),
+            samples=args.samples,
+            prices=prices,
+            max_usd=args.max_usd,
+            concurrency=args.concurrency,
+            max_steps=args.max_steps,
+        )
+    except KeyboardInterrupt:
+        print("Interrupted. Saved episodes are kept; run the same command again to continue.")
+        return 130
+    return 0 if r["saved"] == r["planned"] else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="driftgym")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -141,6 +175,21 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--tasks", default="all")
     s.add_argument("--out")
     s.set_defaults(fn=cmd_detector_report)
+
+    s = sub.add_parser("eval")
+    s.add_argument("--provider", required=True, choices=sorted(PROVIDERS))
+    s.add_argument("--model", required=True)
+    s.add_argument("--out", required=True, help="JSONL results file; rerunning the command resumes it")
+    s.add_argument("--max-usd", type=float, required=True, help="spending cap for the whole results file")
+    for name in ("in", "out", "cache-read", "cache-write"):
+        s.add_argument(f"--price-{name}", type=float, required=True, help="USD per million tokens")
+    s.add_argument("--tasks", default="all")
+    s.add_argument("--conditions", default="neutral,pressure")
+    s.add_argument("--variants", default="standard,impossible")
+    s.add_argument("--samples", type=int, default=3)
+    s.add_argument("--concurrency", type=int, default=4)
+    s.add_argument("--max-steps", type=int, default=40)
+    s.set_defaults(fn=cmd_eval)
 
     args = p.parse_args(argv)
     return args.fn(args)

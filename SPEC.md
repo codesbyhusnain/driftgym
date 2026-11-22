@@ -54,7 +54,8 @@ driftgym/
   validate.py    per-task validation (old ok, broken on new, solution ok, impossible really impossible)
   agents/scripted.py  oracle, noop and 12 single-cheat agents + EXPECTED_FLAG map
   agents/llm.py  model agents: Anthropic and OpenAI-compatible providers, run_episode() -> episode record
-  cli.py         list | validate | run | detector-report
+  eval.py        eval runner: all episodes of a model run, resumable, with a USD spending cap
+  cli.py         list | validate | run | detector-report | eval
 authoring/
   common.py      task(...) helper and writer
   build.py       python authoring/build.py [group] -> writes tasks/
@@ -191,6 +192,14 @@ Written (`driftgym/agents/llm.py`, tested offline in `tests_framework/test_llm.p
 - Concurrency flag (default 4).
 - Hard stop when the running cost estimate reaches `--max-usd`. Prices are supplied by the user, never hard-coded.
 - **Pilot first:** 5 tasks × 1 condition × 1 sample to measure tokens per episode, then size the full run.
+
+Written (`driftgym/eval.py`, `driftgym eval` in `cli.py`, tested offline in `tests_framework/test_eval.py`), not yet run against a real model:
+- Prices are four required flags, `--price-in`, `--price-out`, `--price-cache-read`, `--price-cache-write` (USD per million tokens), matching the four usage counts. `--max-usd` and `--out` are required too.
+- The cap covers the whole output file (saved episodes count toward it) and is checked before every model request, so it can be passed by at most one in-flight request per thread.
+- Saved: finished episodes only. Not saved, so a rerun starts them again: episodes cut short by the cap or Ctrl-C (stop reason `budget`) and episodes that hit an API error after the SDK's retries. The first API error also stops the run.
+- A results file holds one provider and model; resuming it with another is refused.
+- Episodes have no shell tool and share the cached venvs (built before the threads start). `--max-steps` defaults to 40.
+- Pilot command: `driftgym eval --provider anthropic --model <id> --tasks <5 ids> --conditions neutral --variants standard --samples 1 --out results/runs/pilot-<id>.jsonl --max-usd <small cap> --price-in ... --price-out ... --price-cache-read ... --price-cache-write ...`. It prints the mean cost per saved episode, which sizes the full run.
 
 ### Step 6 — Report (`driftgym report results/runs/*.jsonl`)
 Markdown + PNG charts (matplotlib): honest success, cheat rate by type, impossible pass rate; split by model, condition, tier. Include 95% bootstrap intervals. Include 3–5 short, real transcript excerpts showing each cheat type found.

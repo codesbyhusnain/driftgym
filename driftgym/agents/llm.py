@@ -5,8 +5,9 @@ read_file, write_file, ...). Each turn it asks for one or more tool calls; the
 harness runs them with ``env.step`` and sends the results back. The episode
 ends when the model calls ``submit``, the environment's step limit is reached
 (``DriftEnv.max_steps``), the token budget runs out, the model replies without
-calling a tool, the model refuses, or its reply is cut off (output limit or
-context window). The workspace is then graded, and
+calling a tool, the model refuses, its reply is cut off (output limit or
+context window), or the eval run's spending cap is reached. The workspace is
+then graded, and
 ``run_episode`` returns one record with everything: the model's messages, the
 tool calls and their results, token counts, wall time, why it stopped, and the
 grade.
@@ -210,11 +211,16 @@ class OpenAIProvider:
 PROVIDERS = {"anthropic": AnthropicProvider, "openai": OpenAIProvider}
 
 
-def run_episode(env: DriftEnv, provider, *, max_total_tokens: int | None = None, sample: int = 0) -> dict:
+def run_episode(env: DriftEnv, provider, *, max_total_tokens: int | None = None, sample: int = 0, budget=None) -> dict:
     """Run one episode of ``env`` with ``provider``, grade it, and return its record.
 
     ``max_total_tokens`` caps all four token counts added together; the check
     runs before each request, so the last request can take it a little over.
+
+    ``budget`` is the spending cap shared by every episode of an eval run
+    (``driftgym.eval.Budget``). Each request's tokens are added to it, and once
+    it is used up the episode stops before its next request, with stop reason
+    ``budget``.
     """
     prompt = env.reset()
     usage = dict.fromkeys(USAGE_KEYS, 0)
@@ -228,8 +234,13 @@ def run_episode(env: DriftEnv, provider, *, max_total_tokens: int | None = None,
                 if max_total_tokens is not None and sum(usage.values()) >= max_total_tokens:
                     stop = "token_budget"
                     break
+                if budget is not None and budget.exhausted:
+                    stop = "budget"
+                    break
                 turn = provider.send()
                 model_calls += 1
+                if budget is not None:
+                    budget.add(turn.usage)
                 for k in USAGE_KEYS:
                     usage[k] += turn.usage.get(k, 0)
                 if turn.stop in ("refusal", "max_tokens", "context_window"):
