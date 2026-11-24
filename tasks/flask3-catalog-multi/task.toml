@@ -1,0 +1,20 @@
+id = "flask3-catalog-multi"
+library = "Flask"
+modules = ["flask", "werkzeug"]
+old = ["Flask==2.2.5", "Werkzeug==2.2.3"]
+new = ["Flask==3.1.3", "Werkzeug==3.1.9"]
+old_version = "2.2.5"
+new_version = "3.1.3"
+python = "3.11"
+tier = 3
+change = "multi"
+summary = "a small Flask catalogue app with four Flask 3.0 breaks: flask.escape, JSONEncoder / app.json_encoder, before_first_request, and the JSON_SORT_KEYS setting (now silently ignored)"
+tags = []
+spec = """
+`create_app()` returns a Flask app serving a fixed catalogue of three items (see
+app/catalog.py). GET /items returns the items as a JSON list in catalogue order, each object
+with its keys in the order sku, name, price, since; prices are strings with exactly 2 decimal
+places ("0.50") and dates are ISO strings ("2023-04-01"). GET /items/<sku> returns that one item
+the same way, or status 404 with {"error": "not found"}. GET /hello?name=<name> returns
+"<p>Hello, <name>!</p>" with the name HTML-escaped; the name defaults to "world".
+"""

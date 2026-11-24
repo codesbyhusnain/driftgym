@@ -1,0 +1,21 @@
+id = "sqla2-autocommit"
+library = "sqlalchemy"
+modules = ["sqlalchemy"]
+old = ["SQLAlchemy==1.4.54"]
+new = ["SQLAlchemy==2.1.9"]
+old_version = "1.4.54"
+new_version = "2.1.9"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "SQLAlchemy 2.0 connections no longer autocommit writes; uncommitted writes are rolled back (silent data loss)"
+tags = []
+spec = """
+`make_engine(url="sqlite://")` returns an engine whose database has an orders table (created
+if missing). `place_order(engine, customer, total)` saves a new open order and returns its id.
+`close_order(engine, order_id)` marks that order closed (an unknown id changes nothing).
+`open_total(engine, customer)` is the sum of the customer's open orders as a float (0.0 if
+there are none); closed orders do not count. `order_count(engine)` is the number of saved
+orders. Every change is saved when the function returns and is visible to later calls,
+including calls through another engine on the same database.
+"""

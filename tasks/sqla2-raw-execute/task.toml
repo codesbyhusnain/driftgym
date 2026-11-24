@@ -1,0 +1,20 @@
+id = "sqla2-raw-execute"
+library = "sqlalchemy"
+modules = ["sqlalchemy"]
+old = ["SQLAlchemy==1.4.54"]
+new = ["SQLAlchemy==2.1.9"]
+old_version = "1.4.54"
+new_version = "2.1.9"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "Engine.execute was removed in SQLAlchemy 2.0, and raw SQL strings must be wrapped in text()"
+tags = []
+spec = """
+`make_engine(url="sqlite://")` returns an engine whose database has a customers table (id,
+name, balance), creating it if it does not exist yet. `add_customer(engine, name, balance)`
+saves a customer; names may contain any characters, including quotes. `count_customers(engine)`
+returns how many customers are saved. `customers_over(engine, minimum)` returns the names of
+customers whose balance is greater than minimum, in name order. Saved customers are visible to
+every later call, including calls through another engine on the same database.
+"""

@@ -1,0 +1,16 @@
+{"task_id": "pd2-stats-loader", "wrong_fix": "squeeze() without an axis (a one-row file becomes a scalar)", "passed": 5, "failed": 1, "caught": true}
+{"task_id": "pd2-region-totals", "wrong_fix": "fix only the mean; the sum still joins text columns", "passed": 2, "failed": 4, "caught": true}
+{"task_id": "pd3-cow-prices", "wrong_fix": "use .loc but drop the copy, so the caller's catalog changes", "passed": 5, "failed": 1, "caught": true}
+{"task_id": "pd3-text-columns", "wrong_fix": "check is_object_dtype, which the new str dtype fails", "passed": 2, "failed": 4, "caught": true}
+{"task_id": "pd3-groupby-apply", "wrong_fix": "apply with include_groups=False, which drops the team column", "passed": 2, "failed": 3, "caught": true}
+{"task_id": "np2-pixel-promotion", "wrong_fix": "vectorise without widening the dtype (uint8 still wraps)", "passed": 2, "failed": 3, "caught": true}
+{"task_id": "np2-copy-false", "wrong_fix": "drop copy=False, so arrays are always copied", "passed": 4, "failed": 2, "caught": true}
+{"task_id": "sqla2-autocommit", "wrong_fix": "commit the insert but not the update", "passed": 2, "failed": 3, "caught": true}
+{"task_id": "sqla2-rows-select", "wrong_fix": "use row._mapping for values but keep `field in row`", "passed": 4, "failed": 2, "caught": true}
+{"task_id": "pyd2-coercion", "wrong_fix": "round the quantity instead of dropping the fraction", "passed": 3, "failed": 3, "caught": true}
+{"task_id": "pyd2-config-validators", "wrong_fix": "keep only from_attributes; the old strip and read-only settings are lost", "passed": 2, "failed": 5, "caught": true}
+{"task_id": "nx3-adjacency", "wrong_fix": "swap in to_numpy_array but keep `*`, now element-wise", "passed": 2, "failed": 3, "caught": true}
+{"task_id": "skl19-encoder-metrics", "wrong_fix": "drop squared=False, which returns the MSE", "passed": 3, "failed": 2, "caught": true}
+{"task_id": "mm4-schema-defaults", "wrong_fix": "map default= to load_default instead of dump_default", "passed": 1, "failed": 4, "caught": true}
+{"task_id": "httpx-wsgi-params", "wrong_fix": "fix the client but keep params=, which now encodes spaces as +", "passed": 2, "failed": 3, "caught": true}
+{"task_id": "flask3-catalog-multi", "wrong_fix": "move to a JSON provider but drop sort_keys = False", "passed": 3, "failed": 2, "caught": true}

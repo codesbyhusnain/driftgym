@@ -1,0 +1,21 @@
+id = "nx3-adjacency"
+library = "networkx"
+modules = ["networkx"]
+old = ["networkx==2.8.8", "numpy==1.26.4"]
+new = ["networkx==3.6.1", "numpy==1.26.4"]
+old_version = "2.8.8"
+new_version = "3.6.1"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "networkx 3.0 removed to_numpy_matrix, from_numpy_matrix and info; the replacement arrays use * for element-wise, not matrix, multiplication"
+tags = []
+spec = """
+`build_graph(edges)` builds an undirected graph from (node, node, weight) tuples.
+`adjacency(graph, nodes)` returns the weighted adjacency matrix in the order of nodes, as a list
+of rows of floats (0.0 where there is no edge). `two_step(graph, nodes)` returns the matrix
+product of that adjacency matrix with itself (entry [i][j] is the sum over k of w(i, k) *
+w(k, j)), as a list of rows of floats. `from_rows(rows)` builds an undirected graph from a square
+adjacency matrix: nodes 0..n-1, an edge wherever an entry is non-zero, with that entry as its
+`weight`. `describe(graph)` returns "Graph with N nodes and M edges".
+"""

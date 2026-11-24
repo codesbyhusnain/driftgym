@@ -1,0 +1,21 @@
+id = "pil10-resize-text"
+library = "Pillow"
+modules = ["PIL"]
+old = ["Pillow==9.5.0"]
+new = ["Pillow==13.0.0"]
+old_version = "9.5.0"
+new_version = "13.0.0"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "Image.ANTIALIAS, ImageDraw.textsize and font.getsize were removed in Pillow 10"
+tags = []
+spec = """
+`thumbnail(image, max_side)` returns a copy scaled down with Lanczos resampling so that
+neither side is larger than max_side, keeping the aspect ratio (images that already fit are
+not enlarged); the image passed in is not changed. `resize_exact(image, width, height)` returns
+the image resized to exactly that size with Lanczos resampling. `text_size(text)` returns
+(width, height) of the text in Pillow's default font, taken from the text's bounding box
+(right - left, bottom - top). `label(text, padding=4)` returns a white RGB image that is
+text_size(text) plus 2 * padding in each direction, with the text drawn in black.
+"""

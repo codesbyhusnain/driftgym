@@ -1,0 +1,20 @@
+id = "pd2-region-totals"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==1.5.3", "numpy==1.26.4"]
+new = ["pandas==2.2.3", "numpy==1.26.4"]
+old_version = "1.5.3"
+new_version = "2.2.3"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "groupby sum/mean no longer drop text columns in pandas 2.0 (sum joins strings silently, mean raises)"
+tags = []
+spec = """
+`region_totals(sales)` returns a DataFrame indexed by region, sorted by region name, with
+exactly two columns, `units` and `revenue`, holding each region's sums; a missing revenue is
+skipped. `region_averages(sales)` returns the same shape with each region's mean units and
+mean revenue, rounded to 2 decimal places; missing revenues are left out of the mean. The
+sales table may hold other text columns (such as the rep's name or a note); they never
+appear in the results.
+"""

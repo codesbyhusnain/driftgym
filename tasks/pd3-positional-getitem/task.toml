@@ -1,0 +1,18 @@
+id = "pd3-positional-getitem"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==2.2.3", "numpy==2.3.5"]
+new = ["pandas==3.1.1", "numpy==2.3.5"]
+old_version = "2.2.3"
+new_version = "3.1.1"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "Series[int] on a text index no longer falls back to position in pandas 3.0 (KeyError)"
+tags = []
+spec = """
+scores is a Series of points indexed by player name, with no ties. `leader(scores)` returns
+(name, points) for the highest-scoring player and `last_place(scores)` the same for the
+lowest. `gap_to_leader(scores, player)` is the leader's points minus that player's points; an
+unknown player raises KeyError.
+"""

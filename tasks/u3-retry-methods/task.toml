@@ -1,0 +1,22 @@
+id = "u3-retry-methods"
+library = "urllib3"
+modules = ["urllib3"]
+old = ["urllib3==1.26.20"]
+new = ["urllib3==2.8.0"]
+old_version = "1.26.20"
+new_version = "2.8.0"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "urllib3 2.0 removed Retry(method_whitelist=), Retry.DEFAULT_METHOD_WHITELIST and Retry.BACKOFF_MAX"
+tags = []
+spec = """
+`make_retry(total=3, backoff=0.5, methods=None, statuses=(429, 502, 503, 504))` returns a
+urllib3 Retry that retries up to total times on the given statuses, only for the given HTTP
+methods (by default urllib3's default idempotent methods: DELETE, GET, HEAD, OPTIONS, PUT and
+TRACE), with exponential backoff factor backoff. `retries_on(retry, method, status)` is True
+when that policy would retry that method (any case) and status. `backoff_schedule(retry,
+attempts)` returns the delay in seconds before each of the first `attempts` retries (attempts
+is at most total), never more than the maximum backoff. `max_backoff()` returns urllib3's
+default maximum backoff in seconds.
+"""

@@ -1,0 +1,21 @@
+id = "np2-aliases"
+library = "numpy"
+modules = ["numpy"]
+old = ["numpy==1.26.4"]
+new = ["numpy==2.3.5"]
+old_version = "1.26.4"
+new_version = "2.3.5"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "NumPy 2.0 removed aliases: asfarray, round_, cumproduct, product, float_, NaN, alltrue"
+tags = []
+spec = """
+`to_floats(values)` returns values as a float64 numpy array. `growth_factors(rates)`: rates
+are percentage changes per period; returns the cumulative growth factor after each period
+(the product of 1 + rate/100 so far), rounded to 4 decimal places, as a list of floats.
+`total_growth(rates)` returns the factor after all periods, rounded to 4 decimal places (1.0
+for no periods). `drop_negative(values)` returns a float64 array with every negative reading
+replaced by NaN. `all_positive(values)` is True when every value is greater than 0 (also for
+no values).
+"""

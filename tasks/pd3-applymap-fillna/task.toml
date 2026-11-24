@@ -1,0 +1,20 @@
+id = "pd3-applymap-fillna"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==2.2.3", "numpy==2.3.5"]
+new = ["pandas==3.1.1", "numpy==2.3.5"]
+old_version = "2.2.3"
+new_version = "3.1.1"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "DataFrame.applymap and fillna(method=) were removed in pandas 3.0"
+tags = []
+spec = """
+`format_table(frame)` returns a copy of a numeric frame with every value written as a string
+with thousands separators and 2 decimal places (1234.5 -> "1,234.50"). `fill_forward(readings)`
+replaces each missing reading (in a Series or in each column of a DataFrame) with the last
+reading before it; leading gaps stay missing. `fill_back(readings, limit)` replaces missing
+readings with the next reading after them, filling at most `limit` missing readings directly
+before each known reading; trailing gaps stay missing.
+"""

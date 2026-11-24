@@ -1,0 +1,19 @@
+id = "pd3-text-columns"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==2.2.3", "numpy==2.3.5"]
+new = ["pandas==3.1.1", "numpy==2.3.5"]
+old_version = "2.2.3"
+new_version = "3.1.1"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "text columns get the new str dtype in pandas 3.0, so dtype == object checks quietly fail"
+tags = []
+spec = """
+`text_columns(frame)` returns the names of the columns that hold text (strings, possibly with
+missing values), in column order; numbers, booleans and dates are not text.
+`normalise_text(frame)` returns a copy of frame in which every text value is stripped of
+surrounding spaces and lower-cased; missing values stay missing, other columns are unchanged,
+and the frame passed in is not changed.
+"""

@@ -1,0 +1,20 @@
+id = "pyd2-config-validators"
+library = "pydantic"
+modules = ["pydantic"]
+old = ["pydantic==1.10.21"]
+new = ["pydantic==2.14.4"]
+old_version = "1.10.21"
+new_version = "2.14.4"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "Pydantic 2.0 config and validator changes: regex=, orm_mode, root_validator, and two config keys (anystr_strip_whitespace, allow_mutation) that are now silently ignored"
+tags = []
+spec = """
+A Booking has guest, room, nights and check_in (a date, given as a date or "YYYY-MM-DD").
+Surrounding spaces are stripped from text. guest is then title-cased ("ada lovelace" -> "Ada
+Lovelace"). room must be an upper-case letter followed by three digits (after stripping), and
+nights must be at least 1; otherwise a ValidationError is raised. Bookings are read-only:
+assigning to any field raises an error. `booking_from_dict(data)` builds a Booking from a dict;
+`booking_from_row(row)` builds one from any object with those attributes (such as an ORM row).
+"""

@@ -1,0 +1,18 @@
+id = "np2-pixel-promotion"
+library = "numpy"
+modules = ["numpy"]
+old = ["numpy==1.26.4"]
+new = ["numpy==2.3.5"]
+old_version = "1.26.4"
+new_version = "2.3.5"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "NEP 50 promotion in NumPy 2.0: uint8 scalar + Python int stays uint8 and wraps (silent)"
+tags = []
+spec = """
+Images are 2-D numpy arrays of uint8 pixel values (0..255). `brighten(pixels, amount)` returns
+a new uint8 image with amount (an int, possibly negative) added to every pixel, clipped to
+0..255; the image passed in is not changed. `mean_brightness(pixels)` returns the mean pixel
+value as a float rounded to 2 decimal places.
+"""

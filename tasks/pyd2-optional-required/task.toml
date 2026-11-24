@@ -1,0 +1,21 @@
+id = "pyd2-optional-required"
+library = "pydantic"
+modules = ["pydantic"]
+old = ["pydantic==1.10.21"]
+new = ["pydantic==2.14.4"]
+old_version = "1.10.21"
+new_version = "2.14.4"
+python = "3.11"
+tier = 1
+change = "behaviour"
+summary = "Pydantic 2.0 makes Optional[X] fields without a default required"
+tags = []
+spec = """
+`parse_contact(data)` builds a Contact from a dict. Only `name` is required; `email`, `phone`,
+`address` and `tags` may be left out or given as None, and are None when left out. An address
+needs `street` and `city`; its `postcode` may be left out (None). `to_record(data)` returns the
+contact as a plain dict with every field present (missing ones as None, the address as a
+nested dict or None). `mailing_label(data)` returns the name, then the street, then the city
+and postcode separated by a space (postcode omitted when missing), one per line; just the name
+when there is no address. `reachable(data)` is True when the contact has an email or a phone.
+"""

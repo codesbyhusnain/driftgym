@@ -1,0 +1,20 @@
+id = "mm4-schema-defaults"
+library = "marshmallow"
+modules = ["marshmallow"]
+old = ["marshmallow==3.20.2"]
+new = ["marshmallow==4.4.0"]
+old_version = "3.20.2"
+new_version = "4.4.0"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "marshmallow 4.0 removed missing=/default= (now load_default/dump_default, easy to swap), Schema(context=), and changed @validates method arguments"
+tags = []
+spec = """
+`load_product(data)` validates a product dict: `sku` (text) is required; `qty` defaults to 1
+when it is missing and must be at least 1; `status` is passed through when given and stays
+absent when not (there is no default when loading). Invalid input raises
+marshmallow.ValidationError, and so do unknown keys. `dump_products(products, rate=1.0)`
+serialises product dicts to sku, qty, status (written as "active" when the product has none)
+and price, which is base_price * rate rounded to 2 decimal places.
+"""

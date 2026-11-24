@@ -1,0 +1,21 @@
+id = "pd3-cow-prices"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==2.2.3", "numpy==2.3.5"]
+new = ["pandas==3.1.1", "numpy==2.3.5"]
+old_version = "2.2.3"
+new_version = "3.1.1"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "chained assignment (df[col][i] = x) silently does nothing under Copy-on-Write in pandas 3.0"
+tags = []
+spec = """
+The catalog is a DataFrame with columns sku, price and stock and a default 0..n-1 index.
+`apply_discounts(catalog, discounts)` returns a new DataFrame equal to the catalog except that
+the price of each sku in discounts (a dict of sku -> percent off) is reduced by that percentage
+and rounded to 2 decimal places; skus that are not in the catalog are ignored.
+`flag_low_stock(catalog, minimum)` returns a new DataFrame equal to the catalog plus a boolean
+`low` column that is True where stock is below minimum. Neither function changes the catalog
+passed in.
+"""

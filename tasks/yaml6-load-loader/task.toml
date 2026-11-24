@@ -1,0 +1,22 @@
+id = "yaml6-load-loader"
+library = "PyYAML"
+modules = ["yaml"]
+old = ["PyYAML==5.3.1"]
+new = ["PyYAML==6.0.3"]
+old_version = "5.3.1"
+new_version = "6.0.3"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "yaml.load and yaml.load_all need an explicit Loader since PyYAML 6.0"
+tags = []
+spec = """
+`load_config(text)` parses a YAML mapping and returns the defaults {"host": "localhost",
+"port": 8000, "debug": False, "workers": 1} updated with the document's keys; values are typed
+the way YAML types them (8080 is an int, yes/true/on are True, no/false/off are False, lists
+stay lists, ~ is None). An empty document gives the defaults. `load_profiles(text)` reads a
+stream of YAML documents separated by "---"; each non-empty document has a `profile` name, and
+the result maps each name to the defaults updated with the rest of that document. Empty
+documents are skipped. `dump_config(config)` writes a config dict as block-style YAML with
+keys sorted.
+"""

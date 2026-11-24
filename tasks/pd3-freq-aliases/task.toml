@@ -1,0 +1,20 @@
+id = "pd3-freq-aliases"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==2.2.3", "numpy==2.3.5"]
+new = ["pandas==3.1.1", "numpy==2.3.5"]
+old_version = "2.2.3"
+new_version = "3.1.1"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "frequency aliases \"H\", \"M\" and \"Q\" were removed in pandas 3.0 (use \"h\", \"ME\", \"QE\")"
+tags = []
+spec = """
+`hourly_slots(day, hours)` returns "HH:MM" labels for `hours` consecutive hours starting at
+midnight on day (a "YYYY-MM-DD" string). `monthly_totals(daily)`: daily is a Series of values
+indexed by date; returns {month-end date as "YYYY-MM-DD": sum of that month's values} for every
+month from the first value's month to the last value's, in order, with 0.0 for a month with no
+values. `quarter_ends(year)` returns the last day of each quarter of year as "YYYY-MM-DD"
+strings, in order.
+"""

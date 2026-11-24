@@ -1,0 +1,20 @@
+id = "pd2-legacy-api"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==1.5.3", "numpy==1.26.4"]
+new = ["pandas==2.2.3", "numpy==1.26.4"]
+old_version = "1.5.3"
+new_version = "2.2.3"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "DataFrame.lookup, Series.dt.week and pd.datetime were removed in pandas 2.0"
+tags = []
+spec = """
+`price_at(prices, items)`: prices is a DataFrame with one row per product and one column per
+store. Returns the price of each (product, store) pair in items, in order, as a list of
+floats; an unknown product or store raises KeyError. `iso_weeks(dates)` returns the ISO 8601
+week number of each date string, in order, as a list of ints. `start_of_quarter(year,
+quarter)` returns a datetime.datetime for midnight on the first day of that quarter (quarter
+1 starts on 1 January).
+"""

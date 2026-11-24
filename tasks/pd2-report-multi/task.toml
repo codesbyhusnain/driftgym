@@ -1,0 +1,25 @@
+id = "pd2-report-multi"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==1.5.3", "numpy==1.26.4"]
+new = ["pandas==2.2.3", "numpy==1.26.4"]
+old_version = "1.5.3"
+new_version = "2.2.3"
+python = "3.11"
+tier = 3
+change = "multi"
+summary = "a small sales-report app with five pandas 2.0 breaks: append, groupby nuisance columns, value_counts().reset_index() names, iteritems and DataFrame.mean on text columns"
+tags = []
+spec = """
+`load_orders(records)` turns order dicts (order_id, store, product, customer, qty, revenue)
+into a DataFrame with those columns in that order, one row per record, a 0..n-1 index, qty as
+int and revenue as float. `store_totals(orders)` returns a DataFrame indexed by store with
+exactly the columns qty and revenue (each store's sums), sorted by revenue, highest first.
+`best_sellers(orders, n=3)` returns a DataFrame with exactly two columns, `product` and
+`orders` (number of order lines), for the n products with the most order lines, most first,
+with a 0..n-1 index. `columns_dict(frame)` returns {column name: list of values} for every
+column, in order. `build_report(records, top=3)` returns {"stores": store names by revenue,
+highest first, "totals": columns_dict of the store totals, "best_sellers": columns_dict of
+best_sellers(orders, top), "average_order": mean revenue per order rounded to 2 decimal
+places, 0.0 when there are no orders}.
+"""

@@ -1,0 +1,21 @@
+id = "jinja2-markup-filters"
+library = "Jinja2"
+modules = ["jinja2", "markupsafe"]
+old = ["Jinja2==3.0.3", "MarkupSafe==2.0.1"]
+new = ["Jinja2==3.1.6", "MarkupSafe==3.0.3"]
+old_version = "3.0.3"
+new_version = "3.1.6"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "Jinja2 3.1 removed jinja2.Markup, jinja2.escape, contextfilter and environmentfilter"
+tags = []
+spec = """
+`render(source, currency="£", **values)` renders a Jinja2 template with autoescaping and three
+filters: `money` formats a number with the currency symbol, thousands separators and 2 decimal
+places ("£1,234.50"); `greet` turns a name into "<greeting>, <name>!" using the template
+variable `greeting` (default "Hello"); `highlight(word)` wraps every occurrence of word in
+<mark>...</mark> and HTML-escapes everything else, including the word itself.
+`highlight(text, word)` can also be called directly and returns safe markup (an object with
+__html__).
+"""

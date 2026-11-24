@@ -1,0 +1,21 @@
+id = "pd3-groupby-apply"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==2.2.3", "numpy==2.3.5"]
+new = ["pandas==3.1.1", "numpy==2.3.5"]
+old_version = "2.2.3"
+new_version = "3.1.1"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "groupby().apply no longer passes the grouping column to the function in pandas 3.0"
+tags = []
+spec = """
+players is a DataFrame with columns team, name and points, with no tied points within a team.
+`top_per_team(players, n=1)` returns a DataFrame with columns team, name and points holding the
+n highest-scoring players of each team (fewer if the team is smaller): teams in name order,
+highest first within a team, with a 0..k-1 index. `team_shares(players)` returns the players
+with an added `share` column, each player's points divided by their team's total points and
+rounded to 3 decimal places; rows are grouped by team in team-name order, players keep their
+original order within a team, and the index is 0..n-1.
+"""

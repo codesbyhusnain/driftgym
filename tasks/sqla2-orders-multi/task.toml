@@ -1,0 +1,23 @@
+id = "sqla2-orders-multi"
+library = "sqlalchemy"
+modules = ["sqlalchemy"]
+old = ["SQLAlchemy==1.4.54"]
+new = ["SQLAlchemy==2.1.9"]
+old_version = "1.4.54"
+new_version = "2.1.9"
+python = "3.11"
+tier = 3
+change = "multi"
+summary = "a small shop app with five SQLAlchemy 2.0 breaks: no autocommit, select([..]), case([..]), string keys on rows and raw SQL strings"
+tags = []
+spec = """
+`init_db(url="sqlite://")` returns an engine whose database has customers (id, name, city) and
+orders (id, customer_id, amount) tables, created if missing. `add_customer(engine, name, city)`
+and `add_order(engine, customer_id, amount)` save a row and return its id; saved rows are
+visible to every later call, including calls through another engine on the same database.
+`order_summary(engine)` returns one dict per customer that has orders, in name order:
+{"name", "orders": number of orders, "spent": total amount, "band": "gold" if spent is at
+least 100, "silver" if at least 50, otherwise "bronze"}. `big_spenders(engine, minimum)`
+returns the names of customers whose total spend is at least minimum, highest spend first
+(there are no ties).
+"""

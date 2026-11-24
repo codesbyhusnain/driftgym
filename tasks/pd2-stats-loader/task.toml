@@ -1,0 +1,20 @@
+id = "pd2-stats-loader"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==1.5.3", "numpy==1.26.4"]
+new = ["pandas==2.2.3", "numpy==1.26.4"]
+old_version = "1.5.3"
+new_version = "2.2.3"
+python = "3.11"
+tier = 1
+change = "removal"
+summary = "read_csv(squeeze=) and Series.mad were removed in pandas 2.0"
+tags = []
+spec = """
+`load_values(csv_text)` reads CSV text with a header and a single column of numbers and
+returns that column as a pandas Series named after the header, also when there is only one
+row. `NA` marks a missing value. `spread(values)` is the mean absolute deviation of the
+values around their mean, ignoring missing values, rounded to 4 decimal places.
+`summary(csv_text)` returns {"count": number of non-missing values, "mean": their mean
+rounded to 4 decimal places, "spread": spread of the values}.
+"""

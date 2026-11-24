@@ -1,0 +1,19 @@
+id = "skl19-encoder-metrics"
+library = "scikit-learn"
+modules = ["sklearn"]
+old = ["scikit-learn==1.1.3", "numpy==1.26.4", "scipy==1.11.4"]
+new = ["scikit-learn==1.9.1", "numpy==2.3.5", "scipy==1.16.3"]
+old_version = "1.1.3"
+new_version = "1.9.1"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "scikit-learn renamed OneHotEncoder(sparse=) and get_feature_names, and removed mean_squared_error(squared=False); dropping that argument silently returns the MSE"
+tags = []
+spec = """
+`fit_encoder(rows)` fits a one-hot encoder on rows of categorical values; at transform time,
+categories it has not seen are encoded as all zeros. `encode(encoder, rows)` returns the
+one-hot rows as a plain list of lists of floats. `feature_names(encoder, columns)` returns the
+output feature names, "<column>_<category>", in output order, as a list of str.
+`rmse(actual, predicted)` returns the root mean squared error rounded to 4 decimal places.
+"""

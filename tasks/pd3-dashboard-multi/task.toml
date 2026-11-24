@@ -1,0 +1,26 @@
+id = "pd3-dashboard-multi"
+library = "pandas"
+modules = ["pandas"]
+old = ["pandas==2.2.3", "numpy==2.3.5"]
+new = ["pandas==3.1.1", "numpy==2.3.5"]
+old_version = "2.2.3"
+new_version = "3.1.1"
+python = "3.11"
+tier = 3
+change = "multi"
+summary = "a small web-analytics dashboard with five pandas 3.0 breaks: str dtype checks, the \"H\" alias, groupby().apply, applymap and chained assignment"
+tags = []
+spec = """
+Events are dicts with ts ("YYYY-MM-DD HH:MM", all on one day), page, user and ms (response time
+in milliseconds); records holds at least one event. `load_events(records)` returns a DataFrame
+with columns ts (datetimes), page, user and ms (ints), with every text value stripped of
+surrounding spaces and lower-cased. `hourly_hits(events)` returns {"HH:00": number of events in
+that hour} for every hour from the first event's hour to the last's, in order (0 for an hour
+with no events). `slowest_per_page(events)` returns a DataFrame with columns page, user and ms:
+the slowest event of each page (no ties), pages in name order, with a 0..k-1 index.
+`flag_slow(events, threshold_ms)` returns a copy of events with a boolean `slow` column, True
+where ms is above the threshold. `latency_rows(table)` turns a slowest_per_page table into a
+list of [page, user, "1,234 ms"] rows. `build_dashboard(records, slow_ms=1000)` returns
+{"pages": sorted page names, "hits_per_hour": hourly_hits, "slow_events": number of events
+above slow_ms, "slowest": latency_rows of slowest_per_page}.
+"""

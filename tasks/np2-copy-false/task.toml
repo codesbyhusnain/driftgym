@@ -1,0 +1,19 @@
+id = "np2-copy-false"
+library = "numpy"
+modules = ["numpy"]
+old = ["numpy==1.26.4"]
+new = ["numpy==2.3.5"]
+old_version = "1.26.4"
+new_version = "2.3.5"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "np.array(x, copy=False) raises in NumPy 2.0 when a copy is needed; dropping copy=False copies always"
+tags = []
+spec = """
+`as_matrix(data)` returns data as a 2-D float64 numpy array. When data is already a float64
+array it returns that same array object (no copy); lists, tuples and arrays of other dtypes
+are converted. `normalise_rows(data)` scales each row so that it sums to 1 and returns the
+result: when data is a float64 array it is scaled in place (the caller's array changes) and
+returned; otherwise a new float64 array is returned and the input is left unchanged.
+"""

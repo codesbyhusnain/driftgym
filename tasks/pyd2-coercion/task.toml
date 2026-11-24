@@ -1,0 +1,21 @@
+id = "pyd2-coercion"
+library = "pydantic"
+modules = ["pydantic"]
+old = ["pydantic==1.10.21"]
+new = ["pydantic==2.14.4"]
+old_version = "1.10.21"
+new_version = "2.14.4"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "Pydantic 2.0 no longer turns numbers into str fields or truncates floats into int fields"
+tags = []
+spec = """
+Rows are dicts with sku, quantity, unit_price and an optional note (default ""). sku and note
+are stored as text even when given as numbers (1042 -> "1042", 7.5 -> "7.5"). quantity is
+made a whole number by dropping any fraction (2.0 -> 2, 2.9 -> 2); unit_price may be given as
+a number or a numeric string. A quantity or unit_price that is not a number (such as "abc")
+raises ValidationError. `parse_items(rows)` returns the LineItem models in order.
+`item_labels(rows)` returns "<sku> x<quantity>" for each row. `order_total(rows)` is the sum of
+quantity * unit_price over all rows, rounded to 2 decimal places.
+"""

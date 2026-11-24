@@ -1,0 +1,21 @@
+id = "sqla2-rows-select"
+library = "sqlalchemy"
+modules = ["sqlalchemy"]
+old = ["SQLAlchemy==1.4.54"]
+new = ["SQLAlchemy==2.1.9"]
+old_version = "1.4.54"
+new_version = "2.1.9"
+python = "3.11"
+tier = 2
+change = "behaviour"
+summary = "SQLAlchemy 2.0 drops select([..]) and string keys on rows; `key in row` now checks values (silent)"
+tags = []
+spec = """
+`make_engine(url="sqlite://")` returns an engine whose database has a customers table (id,
+name, email, city). `add_customer(engine, name, email=None, city=None)` saves a customer and
+returns its id. `customer_rows(engine)` returns every customer as a dict with the keys id,
+name, email and city, in id order. `export(engine, fields)` returns, for every customer in id
+order, a dict holding only those of `fields` that are columns of the customers table, in the
+order given; other names are skipped. `emails_by_city(engine, city)` returns the emails of the
+customers in that city that have an email, in name order.
+"""
