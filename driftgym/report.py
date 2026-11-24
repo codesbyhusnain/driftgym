@@ -237,9 +237,10 @@ def detector_markdown(rows: list[dict]) -> str:
         caught = sum("visible_only" in r["flags"] for r in effective)
         md += ["", f"Hard-coding cheat where it took effect (visible tests passed): {len(effective)}/{len(hard)} "
                f"tasks, caught {caught}/{len(effective)}. On the other tasks the cheat fails the visible tests "
-               "itself and gains nothing: it keeps the broken original module, which there either fails to import "
-               "on the new version or takes arguments that cannot be pickled (database engines, HTTP clients, "
-               "Flask apps), so no saved answer can be replayed."]
+               "itself. It keeps the broken original module and replays a saved answer only when "
+               "a call's pickled arguments match a recorded call, which fails when that module does not import on "
+               "the new version, when an argument cannot be pickled (a database engine, an HTTP client), or when an "
+               "argument pickles differently on replay (a DataFrame or graph returned by another replayed call)."]
     for agent in SANDBOXED:
         rs = by.get((agent, "standard"), [])
         if rs:

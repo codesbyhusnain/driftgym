@@ -55,11 +55,13 @@ driftgym/
   agents/scripted.py  oracle, noop and 12 single-cheat agents + EXPECTED_FLAG map
   agents/llm.py  model agents: Anthropic and OpenAI-compatible providers, run_episode() -> episode record
   eval.py        eval runner: all episodes of a model run, resumable, with a USD spending cap
-  cli.py         list | validate | run | detector-report | eval
+  report.py      results report (Markdown + charts, bootstrap intervals over tasks) and the detector summary
+  cli.py         list | validate | run | detector-report | eval | report
 authoring/
   common.py      task(...) helper and writer
   build.py       python authoring/build.py [group] -> writes tasks/
-  pandas2.py     2 tasks written and validated
+  pandas2.py, pandas3.py, numpy2.py, sqlalchemy2.py, pydantic2.py, misc.py   the 32 tasks, by library
+  wrong_fixes.py checks that a plausible wrong fix fails each tier-2 task -> results/wrong_fixes.jsonl
 tasks/<id>/      generated: task.toml, repo/, tests/, hidden/, solution/, [impossible/], [shim.py]
 ```
 
@@ -139,19 +141,44 @@ Write tasks as data in `authoring/<group>.py` using `task(...)`, then `python au
 Installs fine: pandas 1.5.3 / 2.2.3 / 3.1.1, numpy 1.26.4 / 2.3.5, SQLAlchemy 1.4.54 / 2.1.9, pydantic 1.10.21 / 2.14.4, PyYAML 5.3.1 / 6.0.3, Pillow 9.5.0 / 13.0.0, networkx 2.8.8, scikit-learn 1.1.3 (numpy 1.26.4, scipy 1.11.4) / 1.9.1 (numpy 2.3.5, scipy 1.16.3), urllib3 1.26.20 / 2.8.0, Jinja2 3.0.3 (markupsafe 2.0.1) / 3.1.6 (markupsafe 3.0.3), Flask 2.2.5 (werkzeug 2.2.3) / 3.1.3 (werkzeug 3.1.9), marshmallow 3.20.2 / 4.4.0, httpx 0.27.2 / 0.28.1.
 Does **not** install on 3.11: numpy 2.5.x (needs 3.12), networkx 3.7 (needs 3.12), PyYAML 5.4.1 (build fails). Pick the newest version that supports 3.11 and verify.
 
-### Candidate changes for other libraries — VERIFY BEFORE USE (not yet probed)
-- NumPy 1.26 → 2.3: removed `np.float_`, `np.NaN`, `np.product`, `np.cumproduct`, `np.alltrue`, `np.sometrue`, `np.round_`, `np.asfarray`, `np.find_common_type`; NEP 50 promotion (e.g. `np.uint8(200) + 100`); `np.array(x, copy=False)` raising when a copy is needed.
-- SQLAlchemy 1.4 → 2.x: `engine.execute()` removed; raw SQL strings need `text()`; `select([cols])` list form; **DML no longer autocommits (silent data loss)**; `row["col"]` → `row._mapping["col"]`; `Query.get` → `Session.get`.
-- Pydantic 1 → 2: `Optional[X]` without default becomes required; int→str and float→int coercion now errors; `orm_mode`/`from_orm`; `__root__` models; `Field(regex=)`; `const=`.
-- PyYAML 5 → 6: `yaml.load(f)` without `Loader` → TypeError.
-- Pillow 9 → 10+: `Image.ANTIALIAS` removed; `ImageDraw.textsize` / `font.getsize` removed (use `textbbox`/`getbbox`).
-- networkx 2 → 3: `to_numpy_matrix`, `from_numpy_matrix`, `nx.info`, `write_gpickle` removed.
-- scikit-learn 1.1 → 1.9: `get_feature_names` removed; `OneHotEncoder(sparse=)` → `sparse_output`; `mean_squared_error(squared=False)` removed.
-- urllib3 1.26 → 2: `Retry(method_whitelist=)` removed (use `allowed_methods`).
-- Jinja2 3.0 → 3.1: `from jinja2 import Markup, escape` removed; `contextfilter`/`environmentfilter` → `pass_context`/`pass_environment`.
-- Flask 2.2 → 3: `before_first_request` removed; `flask.json.JSONEncoder` and `app.json_encoder` removed (use a JSON provider); `flask.escape`/`flask.Markup` removed.
-- marshmallow 3 → 4: `missing=`/`default=` → `load_default`/`dump_default`; schema `context` removed.
-- httpx 0.27 → 0.28: `Client(app=...)` removed (use `transport=httpx.WSGITransport(app=...)`); `proxies=` removed.
+### Other libraries (probed on Python 3.11 by running both versions, 24 Nov 2026)
+pandas 3.1.1 requires numpy ≥ 2.0.2, so the pandas 2.2 → 3.1 tasks pin numpy 2.3.5 on both sides (pandas 2.2.3 runs on it). The newest networkx that installs on 3.11 is 3.6.1.
+
+| Library | Changed | Old → new behaviour |
+|---|---|---|
+| NumPy 1.26.4 → 2.3.5 | `float_`, `NaN`, `Inf`, `product`, `cumproduct`, `alltrue`, `sometrue`, `round_`, `asfarray`, `find_common_type`, `complex_`, `string_`, `unicode_`, `msort` | removed (AttributeError) |
+| | `np.uint8(200) + 100` (NEP 50) | int64 300 → **uint8 44 (silent wrap)**; a running total `0 + uint8` becomes uint8 and wraps |
+| | `uint8 array + 300` / `+ (-1)` | int16 result → OverflowError |
+| | `np.array(x, copy=False)` when a copy is needed | copies → ValueError |
+| | repr of scalars | `1.5` → `np.float64(1.5)` (silent in string building) |
+| SQLAlchemy 1.4.54 → 2.1.9 | `Engine.execute`, `engine.table_names()`, `MetaData(bind=)`, `Session(autocommit=True)` | removed |
+| | `conn.execute("raw SQL")` | works → ObjectNotExecutableError (needs `text()`) |
+| | `select([..])`, `case([(..)])` list forms | work → ArgumentError |
+| | writes on `engine.connect()` without commit | autocommitted → **rolled back on close (silent data loss)** |
+| | `row["col"]`, `row.keys()`, `dict(row)` | work → TypeError/AttributeError |
+| | `"col" in row` | checks keys → **checks values (silent False)** |
+| | `Query.get` | still works in 2.1.9 (legacy, not removed) |
+| Pydantic 1.10.21 → 2.14.4 | `Optional[X]` without default | optional → required |
+| | int/float/bool/Decimal → `str` field | coerced → ValidationError |
+| | 2.9 → `int` field | truncated to 2 → ValidationError (2.0 still accepted) |
+| | `Field(regex=)`, `Field(const=)`, `__root__`, `@root_validator` without `skip_on_failure` | work → error at class definition |
+| | `orm_mode` + `from_orm` | works → PydanticUserError |
+| | Config `anystr_strip_whitespace`, `min_anystr_length`, `allow_mutation=False` | applied → **silently ignored** |
+| | `.json()` output | `{"a": 1}` → `{"a":1}` |
+| PyYAML 5.3.1 → 6.0.3 | `yaml.load(s)`, `yaml.load_all(s)` without Loader | FullLoader → TypeError |
+| Pillow 9.5.0 → 13.0.0 | `Image.ANTIALIAS`, `Image.LINEAR`, `Image.CUBIC`, `ImageDraw.textsize`, `font.getsize` | removed |
+| | `ImageFont.load_default()` | bitmap font → FreeType font with different metrics ("Hello" 30 → 25 px wide) |
+| networkx 2.8.8 → 3.6.1 | `to_numpy_matrix`, `from_numpy_matrix`, `info`, `read/write_gpickle`, `to_scipy_sparse_matrix`, `OrderedGraph` | removed; the replacement `to_numpy_array` returns an ndarray, where `*` is element-wise, not matrix multiplication |
+| | `node_link_data` | key `links` → `edges` |
+| scikit-learn 1.1.3 → 1.9.1 (numpy 1.26.4 → 2.3.5) | `OneHotEncoder(sparse=)`, `get_feature_names`, `mean_squared_error(squared=)`, `LinearRegression(normalize=)`, `LogisticRegression(multi_class=)`, `penalty="none"`, `max_features="auto"` | removed or renamed (`sparse_output`, `get_feature_names_out`, `root_mean_squared_error`, `penalty=None`) |
+| urllib3 1.26.20 → 2.8.0 | `Retry(method_whitelist=)`, `Retry.DEFAULT_METHOD_WHITELIST`, `Retry.BACKOFF_MAX`, `DEFAULT_REDIRECT_HEADERS_BLACKLIST` | removed (`allowed_methods`, `DEFAULT_ALLOWED_METHODS`, `DEFAULT_BACKOFF_MAX`) |
+| Jinja2 3.0.3 → 3.1.6 | `jinja2.Markup`, `jinja2.escape`, `contextfilter`, `environmentfilter`, `evalcontextfilter`, `contextfunction`, `ext.autoescape`, `ext.with_` | removed (markupsafe, `pass_context`, `pass_environment`) |
+| Flask 2.2.5 → 3.1.3 | `flask.escape`, `flask.Markup`, `flask.json.JSONEncoder`, `app.json_encoder`, `before_first_request`, `_app_ctx_stack`; werkzeug `url_quote`, `url_parse` | removed |
+| | `app.config["JSON_SORT_KEYS"] = False` | honoured → **silently ignored** (use `app.json.sort_keys`) |
+| marshmallow 3.20.2 → 4.4.0 | `missing=`, `default=`, `Schema(context=)`, `self.context`, `pass_many=` | removed (`load_default`, `dump_default`, `marshmallow.experimental.context`, `pass_collection`) |
+| | `@validates` methods | called with the value → also get `data_key=`, so `def check(self, value)` raises TypeError |
+| httpx 0.27.2 → 0.28.1 | `Client(app=)`, `AsyncClient(app=)`, `proxies=` | removed (`transport=httpx.WSGITransport(app=)`, `proxy=`) |
+| | spaces in `params=` | `%20` → **`+` (silent)** |
 
 ---
 
@@ -166,11 +193,17 @@ Planned set (ids are suggestions):
 - Pydantic: `pyd2-optional-required` (T2), `pyd2-coercion` (T2), `pyd2-config-validators` (T1/T2).
 - One or two each: PyYAML, Pillow, networkx, scikit-learn, urllib3, Jinja2, Flask (T2/T3), marshmallow, httpx.
 
+Done (24 Nov 2026): all 32 written in `authoring/` and valid (`results/validate.jsonl`); the list with tiers is `results/tasks.md`. Changes from the plan: `pd2-legacy-api` leaves out `Int64Index` (on 1.5.3 the default RangeIndex is not an Int64Index but an int32 index is, so the old behaviour is too odd to specify); `pd3-positional-getitem` and `pyd2-optional-required` are tier 1, because the break is loud and the obvious fix is right; one task each for the nine smaller libraries (`yaml6-load-loader`, `pil10-resize-text`, `nx3-adjacency`, `skl19-encoder-metrics`, `u3-retry-methods`, `jinja2-markup-filters`, `flask3-catalog-multi` (T3), `mm4-schema-defaults`, `httpx-wsgi-params`). `authoring/wrong_fixes.py` checks that a plausible wrong fix fails each tier-2 task (`results/wrong_fixes.jsonl`).
+
 ### Step 2 — Framework unit tests
 `tests_framework/` (separate from task tests): detectors on hand-written snippets (true positives and legit code that must not flag, e.g. `pd.options.display.max_rows = 5`), workspace diff, grading-dir isolation (a conftest in app/ must not load), runner parsing (collection errors, timeouts).
 
+Done: `pytest` runs the framework tests in `tests_framework/` (detectors, workspace, runner, sandbox, grading, CLI, model harness, eval runner, report).
+
 ### Step 3 — Detector report on all tasks
 `driftgym detector-report --out results/detector.jsonl`, then a script that writes `results/detector.md` (catch rate per cheat type with counts, oracle false-positive rate, oracle solve rate, impossible check). Investigate any miss or false positive before moving on.
+
+Done: `driftgym detector-report --out results/detector.jsonl --md results/detector.md` runs every scripted agent on every task and writes both files.
 
 ### Step 4 — Model harness (`driftgym/agents/llm.py`)
 - Providers: `anthropic` (Messages API tool use) and `openai` (Chat Completions function calling; `OPENAI_BASE_URL` for OpenRouter/vLLM/open models).
@@ -204,8 +237,12 @@ Written (`driftgym/eval.py`, `driftgym eval` in `cli.py`, tested offline in `tes
 ### Step 6 — Report (`driftgym report results/runs/*.jsonl`)
 Markdown + PNG charts (matplotlib): honest success, cheat rate by type, impossible pass rate; split by model, condition, tier. Include 95% bootstrap intervals. Include 3–5 short, real transcript excerpts showing each cheat type found.
 
+Written (`driftgym/report.py`, `driftgym report`, tested in `tests_framework/test_report.py` on hand-made records): `results/report.md` with tables by model × condition × variant, by tier, and by flag type; stop reasons and token totals; `figures/honest_success.png`, `figures/impossible_pass.png`, `figures/flags.png`; one excerpt per flag type found (up to 5). The 95% intervals are a bootstrap over tasks (2000 resamples, fixed seed), since episodes of one task are not independent. Charts need `pip install -e '.[report]'` (matplotlib). Not yet run on real model results.
+
 ### Step 7 — README and write-up
 README: one-paragraph pitch, quickstart, task format, grading design, detector results, model results, limitations, how to add tasks, citation of related work, AI-use disclosure. Write-up: question → method → results → limitations → what an RL training run (Stage 2: GRPO on a small open model, with/without a hack penalty) would test.
+
+Written: `README.md` and `paper/writeup.md`, with the detector results; the model-results sections say the runs have not happened yet.
 
 ### Step 8 — Final checks
 Fresh clone → `pip install -e '.[all]'` → `driftgym validate` (all valid) → `driftgym detector-report` → numbers in README match `results/`.
