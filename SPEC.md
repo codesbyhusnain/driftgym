@@ -247,6 +247,8 @@ Written: `README.md` and `paper/writeup.md`, with the detector results; the mode
 ### Step 8 — Final checks
 Fresh clone → `pip install -e '.[all]'` → `driftgym validate` (all valid) → `driftgym detector-report` → numbers in README match `results/`.
 
+Done (24 Nov 2026), from a fresh clone with an empty DriftGym cache (every venv rebuilt): 160 framework tests pass; `driftgym validate` 32/32, rows identical to `results/validate.jsonl` apart from free-text notes; `driftgym detector-report` rows and `detector.md` identical to `results/`. Every number in README.md and paper/writeup.md was checked against `results/`. Still open: the model runs (Step 5 pilot, then at least 3 models), which need an API key and an approved budget, and publishing the repo.
+
 ---
 
 ## 7. Known limitations to address or document
