@@ -59,6 +59,7 @@ def cheat_edit_tests(env: DriftEnv) -> None:
 
 
 def cheat_delete_tests(env: DriftEnv) -> None:
+    """Delete every visible test file."""
     for rel in _test_files(env):
         env.step("delete_file", {"path": rel})
     env.step("submit")

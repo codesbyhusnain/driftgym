@@ -1,13 +1,14 @@
 """Command line interface.
 
-    driftgym list
+    driftgym list [--tasks SEL] [--md FILE]
     driftgym validate [--tasks SEL] [--no-old]
     driftgym run --agent oracle|noop|cheat_* [--tasks SEL] [--variant standard|impossible] [--out FILE]
-    driftgym detector-report [--tasks SEL] [--out FILE]
+    driftgym detector-report [--tasks SEL] [--out FILE] [--md FILE]
     driftgym eval --provider anthropic|openai --model ID --out FILE --max-usd N
                   --price-in P --price-out P --price-cache-read P --price-cache-write P
                   [--tasks SEL] [--conditions neutral,pressure] [--variants standard,impossible]
                   [--samples 3] [--concurrency 4] [--max-steps 40]
+    driftgym report RUN.jsonl [RUN.jsonl ...] [--out-dir results]
 
 Prices are USD per million tokens, taken from the provider's price list for
 the model; ``eval`` never assumes a price.
@@ -26,6 +27,7 @@ from driftgym.agents import AGENTS, EXPECTED_FLAG, SANDBOXED
 from driftgym.agents.llm import PROVIDERS
 from driftgym.env import DriftEnv
 from driftgym.eval import run_eval
+from driftgym.report import build_report, detector_markdown, load_records, tasks_markdown
 from driftgym.task import load_tasks
 from driftgym.validate import validate_task
 
@@ -40,9 +42,13 @@ def _write_jsonl(path: str | None, rows: list[dict]) -> None:
 
 
 def cmd_list(args) -> int:
-    for t in load_tasks(args.tasks):
+    tasks = load_tasks(args.tasks)
+    for t in tasks:
         imp = " +impossible" if t.has_impossible else ""
         print(f"{t.id:32s} tier {t.tier}  {t.library} {t.old_version} -> {t.new_version}  {t.change}{imp}")
+    if args.md:
+        Path(args.md).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.md).write_text(tasks_markdown(tasks))
     return 0
 
 
@@ -101,6 +107,9 @@ def cmd_detector_report(args) -> int:
         if t.has_impossible:
             rows.append(run_scripted("oracle", t, "impossible"))
     _write_jsonl(args.out, rows)
+    if args.md:
+        Path(args.md).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.md).write_text(detector_markdown(rows))
 
     print("\nCatch rate by cheat (expected flag raised, reward zeroed for hard flags):")
     by = defaultdict(list)
@@ -149,12 +158,20 @@ def cmd_eval(args) -> int:
     return 0 if r["saved"] == r["planned"] else 1
 
 
+def cmd_report(args) -> int:
+    """Write report.md and figures/ for the given eval results files."""
+    path = build_report(load_records(args.runs), Path(args.out_dir), args.runs)
+    print(f"wrote {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="driftgym")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("list")
     s.add_argument("--tasks", default="all")
+    s.add_argument("--md", help="also write the task table as Markdown (e.g. results/tasks.md)")
     s.set_defaults(fn=cmd_list)
 
     s = sub.add_parser("validate")
@@ -174,6 +191,7 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("detector-report")
     s.add_argument("--tasks", default="all")
     s.add_argument("--out")
+    s.add_argument("--md", help="also write the summary as Markdown (e.g. results/detector.md)")
     s.set_defaults(fn=cmd_detector_report)
 
     s = sub.add_parser("eval")
@@ -190,6 +208,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--concurrency", type=int, default=4)
     s.add_argument("--max-steps", type=int, default=40)
     s.set_defaults(fn=cmd_eval)
+
+    s = sub.add_parser("report")
+    s.add_argument("runs", nargs="+", help="results files written by driftgym eval")
+    s.add_argument("--out-dir", default="results")
+    s.set_defaults(fn=cmd_report)
 
     args = p.parse_args(argv)
     return args.fn(args)
