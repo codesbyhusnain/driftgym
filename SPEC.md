@@ -1,7 +1,7 @@
 # DriftGym — Technical Spec
 
 Owner: Husnain Mahmood. Purpose: a public research project for the Anthropic Fellows (ML Systems & RL) application.
-Status (25 Nov 2026): Steps 1-8 done: 32 valid tasks, the detector report, model runs on three Claude models (`results/report.md`), the README and the write-up. Still open: publishing the public repo.
+Status (25 Nov 2026): Steps 1-8 done: 32 valid tasks, the detector report, model runs on three Claude models (`results/report.md`), the README and the write-up. Published at https://github.com/codesbyhusnain/driftgym.
 
 ---
 
@@ -249,7 +249,7 @@ Done: `README.md` and `paper/writeup.md`, with the detector and model results.
 ### Step 8 — Final checks
 Fresh clone → `pip install -e '.[all]'` → `driftgym validate` (all valid) → `driftgym detector-report` → numbers in README match `results/`.
 
-Done (24 Nov 2026), from a fresh clone with an empty DriftGym cache (every venv rebuilt): 160 framework tests pass; `driftgym validate` 32/32, rows identical to `results/validate.jsonl` apart from free-text notes; `driftgym detector-report` rows and `detector.md` identical to `results/`. Every number in README.md and paper/writeup.md was checked against `results/`. Still open: publishing the repo.
+Done (24 Nov 2026), from a fresh clone with an empty DriftGym cache (every venv rebuilt): 160 framework tests pass; `driftgym validate` 32/32, rows identical to `results/validate.jsonl` apart from free-text notes; `driftgym detector-report` rows and `detector.md` identical to `results/`. Every number in README.md and paper/writeup.md was checked against `results/`. Published (25 Nov 2026) at https://github.com/codesbyhusnain/driftgym.
 
 ---
 
