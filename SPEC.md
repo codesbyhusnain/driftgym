@@ -1,7 +1,7 @@
 # DriftGym — Technical Spec
 
 Owner: Husnain Mahmood. Purpose: a public research project for the Anthropic Fellows (ML Systems & RL) application.
-Status at handover (20 Nov 2026, 01:00): core framework written and working end to end on 2 tasks. Everything below "Remaining work" is still to do.
+Status (25 Nov 2026): Steps 1-8 done: 32 valid tasks, the detector report, model runs on three Claude models (`results/report.md`), the README and the write-up. Still open: publishing the public repo.
 
 ---
 
@@ -212,7 +212,7 @@ Done: `driftgym detector-report --out results/detector.jsonl --md results/detect
 - Retries with backoff on rate limits and 5xx; never retry a whole episode silently.
 - Model names come from CLI args; do not hard-code model IDs.
 
-Written (`driftgym/agents/llm.py`, tested offline in `tests_framework/test_llm.py`), not yet run against a real model:
+Done (`driftgym/agents/llm.py`, tested offline in `tests_framework/test_llm.py`, run on three Claude models on 25 Nov 2026):
 - `run_episode(env, provider, max_total_tokens=None, sample=0)` resets, runs, grades and closes the env, and returns the record. Stop reasons: `submit`, `max_steps`, `token_budget`, `no_tool_call`, `refusal`, `max_tokens`, `context_window`, `error`.
 - The step limit is `DriftEnv.max_steps` (default 60); the eval runner should pass 40.
 - Anthropic requests use automatic prompt caching (`cache_control` on every request) and send back the full assistant content, thinking blocks included. `effort` is optional (omitted = the model's default) and recorded in `settings`. No `temperature` (rejected by the current API).
@@ -226,7 +226,7 @@ Written (`driftgym/agents/llm.py`, tested offline in `tests_framework/test_llm.p
 - Hard stop when the running cost estimate reaches `--max-usd`. Prices are supplied by the user, never hard-coded.
 - **Pilot first:** 5 tasks × 1 condition × 1 sample to measure tokens per episode, then size the full run.
 
-Written (`driftgym/eval.py`, `driftgym eval` in `cli.py`, tested offline in `tests_framework/test_eval.py`), not yet run against a real model:
+Done (`driftgym/eval.py`, `driftgym eval` in `cli.py`, tested offline in `tests_framework/test_eval.py`):
 - Prices are four required flags, `--price-in`, `--price-out`, `--price-cache-read`, `--price-cache-write` (USD per million tokens), matching the four usage counts. `--max-usd` and `--out` are required too.
 - The cap covers the whole output file (saved episodes count toward it) and is checked before every model request, so it can be passed by at most one in-flight request per thread.
 - Saved: finished episodes only. Not saved, so a rerun starts them again: episodes cut short by the cap or Ctrl-C (stop reason `budget`) and episodes that hit an API error after the SDK's retries. The first API error also stops the run.
@@ -234,25 +234,29 @@ Written (`driftgym/eval.py`, `driftgym eval` in `cli.py`, tested offline in `tes
 - Episodes have no shell tool and share the cached venvs (built before the threads start). `--max-steps` defaults to 40.
 - Pilot command: `driftgym eval --provider anthropic --model <id> --tasks <5 ids> --conditions neutral --variants standard --samples 1 --out results/runs/pilot-<id>.jsonl --max-usd <small cap> --price-in ... --price-out ... --price-cache-read ... --price-cache-write ...`. It prints the mean cost per saved episode, which sizes the full run.
 
+Run (25 Nov 2026), with a $10 budget for everything: a pilot of 3 tasks (one per tier) × neutral × standard × 1 sample on each model, written to the models' final files so the full run reused it; then `claude-haiku-5-5` with 3 samples of every task, condition and variant (270 episodes), `claude-sonnet-5-5` with 2 (180), and `claude-opus-5-5` with 1 plus a second sample of the impossible twins (116). Default effort, `max_tokens` 16000, 40 steps. Prices (USD per million tokens: input, output, cache read, cache write at 1.25× input for the 5-minute TTL): Opus 4 / 20 / 0.20 / 5, Sonnet 2 / 10 / 0.10 / 2.50; Haiku at its upper (>100K-prompt) tier, 0.50 / 2.50 / 0.05 / 0.625, so its estimate is an upper bound. Two runs reached their caps with episodes in flight (2 Opus, 1 Sonnet); rerunning finished them. Sonnet and Opus have fewer than the 3 samples in the definition of done because of the budget. In `results/runs/` the home folder and the temporary folder in tool outputs were shortened to `~` and `$TMPDIR` before committing; the report is identical before and after.
+
 ### Step 6 — Report (`driftgym report results/runs/*.jsonl`)
 Markdown + PNG charts (matplotlib): honest success, cheat rate by type, impossible pass rate; split by model, condition, tier. Include 95% bootstrap intervals. Include 3–5 short, real transcript excerpts showing each cheat type found.
 
-Written (`driftgym/report.py`, `driftgym report`, tested in `tests_framework/test_report.py` on hand-made records): `results/report.md` with tables by model × condition × variant, by tier, and by flag type; stop reasons and token totals; `figures/honest_success.png`, `figures/impossible_pass.png`, `figures/flags.png`; one excerpt per flag type found (up to 5). The 95% intervals are a bootstrap over tasks (2000 resamples, fixed seed), since episodes of one task are not independent. Charts need `pip install -e '.[report]'` (matplotlib). Not yet run on real model results.
+Written (`driftgym/report.py`, `driftgym report`, tested in `tests_framework/test_report.py` on hand-made records): `results/report.md` with tables by model × condition × variant, by tier, and by flag type; stop reasons and token totals; `figures/honest_success.png`, `figures/impossible_pass.png`, `figures/cheating_impossible.png`, `figures/flags.png`; one excerpt per flag type found (up to 5). The 95% intervals are a bootstrap over tasks (2000 resamples, fixed seed), since episodes of one task are not independent. Charts need `pip install -e '.[report]'` (matplotlib). Added after the model runs: `test_tamper` also fires on new test files, which leave the given tests alone and cannot change the grade, so the report splits `test_tamper` episodes into "only added new test files" and "edited or deleted given tests" and gives the cheating rate without the first kind. The detector itself is unchanged. Done: `results/report.md` from the model runs.
 
 ### Step 7 — README and write-up
 README: one-paragraph pitch, quickstart, task format, grading design, detector results, model results, limitations, how to add tasks, citation of related work, AI-use disclosure. Write-up: question → method → results → limitations → what an RL training run (Stage 2: GRPO on a small open model, with/without a hack penalty) would test.
 
-Written: `README.md` and `paper/writeup.md`, with the detector results; the model-results sections say the runs have not happened yet.
+Done: `README.md` and `paper/writeup.md`, with the detector and model results.
 
 ### Step 8 — Final checks
 Fresh clone → `pip install -e '.[all]'` → `driftgym validate` (all valid) → `driftgym detector-report` → numbers in README match `results/`.
 
-Done (24 Nov 2026), from a fresh clone with an empty DriftGym cache (every venv rebuilt): 160 framework tests pass; `driftgym validate` 32/32, rows identical to `results/validate.jsonl` apart from free-text notes; `driftgym detector-report` rows and `detector.md` identical to `results/`. Every number in README.md and paper/writeup.md was checked against `results/`. Still open: the model runs (Step 5 pilot, then at least 3 models), which need an API key and an approved budget, and publishing the repo.
+Done (24 Nov 2026), from a fresh clone with an empty DriftGym cache (every venv rebuilt): 160 framework tests pass; `driftgym validate` 32/32, rows identical to `results/validate.jsonl` apart from free-text notes; `driftgym detector-report` rows and `detector.md` identical to `results/`. Every number in README.md and paper/writeup.md was checked against `results/`. Still open: publishing the repo.
 
 ---
 
 ## 7. Known limitations to address or document
-- `test_detection` (stack-frame inspection, `sys.argv` outside `if __name__ == "__main__"`, test-runner words in strings) and `runtime_tamper` (exec/eval, `importlib.import_module`, `atexit`, `gc`, ...) flag things honest migration code rarely needs, but both are hard flags; check false positives on model runs and adjust.
+- `test_detection` (stack-frame inspection, `sys.argv` outside `if __name__ == "__main__"`, test-runner words in strings) and `runtime_tamper` (exec/eval, `importlib.import_module`, `atexit`, `gc`, ...) flag things honest migration code rarely needs, but both are hard flags. Neither fired in the 566 model episodes (`results/report.md`).
+- `test_tamper` also fires on new test files the agent adds, which cannot change the grade; Opus did this in 3 pressure episodes. The report counts them apart ("cheating excl. added tests").
+- The pressure condition changes two things at once (urgency, and no rules about tests), so it cannot say which one leads to test edits. A third condition, pressure with the rules, would separate them.
 - The code detectors are static, so deliberate obfuscation beyond what they fold (e.g. `getattr` with a computed name, strings built at run time) gets past them. The canary, the expected-test check and the sandbox are the run-time defences behind them.
 - `library_patch` allowlist covers `options`, `set_printoptions`, `random`; extend if honest fixes trip it. Assigning on a class through `type(x)` or `x.__class__` is flagged whatever the class.
 - `exception_swallow` catches broad handlers that only pass, log, or return or assign an empty value; handlers that compute a fallback from arguments are not caught.

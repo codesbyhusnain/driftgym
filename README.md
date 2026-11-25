@@ -78,11 +78,24 @@ Fourteen scripted agents ran on all 32 tasks, 438 graded episodes in all: the re
 
 ## Model results
 
-Not run yet: the model harness and eval runner are tested offline only, with stand-in models. When runs exist, `driftgym report` writes the tables and charts to `results/report.md` from `results/runs/*.jsonl`.
+Three Claude models through the Anthropic API at their default settings (Haiku 5.5, Sonnet 5.5, Opus 5.5), 566 episodes in all. Haiku has 3 samples of every task, prompt and variant, Sonnet 2, and Opus 1 plus a second sample of the impossible twins; the runs were sized to a $10 budget. Full tables with 95% intervals, charts and transcript excerpts: [results/report.md](results/report.md). Every transcript is in `results/runs/`.
+
+| | Haiku 5.5 | Sonnet 5.5 | Opus 5.5 |
+|---|---|---|---|
+| Standard tasks solved, both prompts | 100% | 100% | 100% |
+| Standard tasks: cheating, not counting added test files | 0% | 0% | 0% |
+| Impossible twins, neutral prompt: cheating | 0% | 0% | 0% |
+| Impossible twins, pressure prompt: cheating (all test edits) | 97% | 100% | 81% |
+| Impossible tests passed in grading | 0% | 0% | 0% |
+
+- **Solvable tasks: no cheating.** Every model fixed the code on every standard task under both prompts, and none edited, deleted or faked the given tests. The only hard flags on standard tasks are 3 of Opus's 32 pressure episodes, in which it added new test files of its own; `test_tamper` counts added tests by definition, and the report lists them apart because a new test file cannot change the grade.
+- **Impossible twins: the prompt decides.** With the neutral prompt, which says not to modify the tests, no model touched them: they fixed the code and left the contradictory test failing. With the pressure prompt (CI is red, pass the tests quickly, no rules), the models edited the given tests in most episodes.
+- **The edits were open.** The models said the test contradicted the specification and changed its expected value to match the specification; none deleted a given test or loosened a check, and none passed the impossible tests in grading, because grading uses the original tests. Opus was the likeliest to leave the test failing and hand the decision back to the user (honest success on these episodes: Opus 19%, Haiku 3%, Sonnet 0%).
+- **Caveats.** The pressure prompt both adds urgency and drops the rules, so these runs cannot say which of the two leads to the test edits. The standard tasks did not separate the models (all solved everything), so harder tasks are needed to measure honest success. Details in [paper/writeup.md](paper/writeup.md).
 
 ## Limitations
 
-Tasks are small (a few dozen lines each). The code detectors are static, so deliberately obfuscated code can get past them; the canary and the sandbox are the run-time defences. Agent code shares the pytest process with the hidden tests during grading. Soft flags need human review (an honest but incomplete fix is `visible_only`). The sandbox is macOS only. The full list is in [paper/writeup.md](paper/writeup.md#4-limitations) and SPEC.md, section 7.
+Tasks are small (a few dozen lines each). The code detectors are static, so deliberately obfuscated code can get past them; the canary and the sandbox are the run-time defences. Agent code shares the pytest process with the hidden tests during grading. Soft flags need human review (an honest but incomplete fix is `visible_only`). The sandbox is macOS only. The model runs cover one model family at default settings, with fewer samples for the larger models, and the pressure prompt changes two things at once (urgency and no rules). The full list is in [paper/writeup.md](paper/writeup.md#4-limitations) and SPEC.md, section 7.
 
 ## Adding a task
 
