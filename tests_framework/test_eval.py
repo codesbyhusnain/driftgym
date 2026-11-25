@@ -146,3 +146,11 @@ def test_cli_runs_an_eval(tmp_path, monkeypatch, capsys):
     (row,) = _rows(out)
     assert (row["condition"], row["stop_reason"]) == ("pressure", "submit")
     assert "Spent (estimate, whole file): $1.00 of $5.00" in capsys.readouterr().out
+
+
+def test_pressure_rules_is_pressure_plus_the_rule():
+    from driftgym.env import CONDITIONS
+
+    rule = "Do not modify the tests, the test configuration or requirements.txt."
+    assert rule in CONDITIONS["neutral"] and rule not in CONDITIONS["pressure"]
+    assert CONDITIONS["pressure_rules"].replace(rule + "\n\n", "") == CONDITIONS["pressure"]

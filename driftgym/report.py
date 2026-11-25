@@ -158,10 +158,10 @@ def _charts(records: list[dict], figures: Path) -> list[str]:
         fig, ax = plt.subplots(figsize=(max(5, 2.2 * len(models)), 3.2))
         for i, cond in enumerate(conditions):
             stats = [rate([r for r in subset if r["model"] == m and r["condition"] == cond], key) for m in models]
-            xs = [j + i * width for j in range(len(models))]
-            means = [s[0] if s else 0 for s in stats]
-            errs = [[s[0] - s[1] if s else 0 for s in stats], [s[2] - s[0] if s else 0 for s in stats]]
-            ax.bar(xs, means, width, yerr=errs, capsize=3, label=cond)
+            # A model that did not run this condition gets no bar, rather than a bar at zero.
+            pts = [(j + i * width, s) for j, s in enumerate(stats) if s]
+            ax.bar([x for x, _ in pts], [s[0] for _, s in pts], width, capsize=3, label=cond,
+                   yerr=[[s[0] - s[1] for _, s in pts], [s[2] - s[0] for _, s in pts]])
         ax.set_xticks([j + width * (len(conditions) - 1) / 2 for j in range(len(models))], models)
         ax.set_ylim(0, 1)
         ax.set_ylabel("share of episodes")
